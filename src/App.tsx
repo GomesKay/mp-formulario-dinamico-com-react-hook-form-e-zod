@@ -1,5 +1,5 @@
-import FormHeader from './components/FormHeader';
-import Form from './components/Form';
+import FormHeader from "./components/FormHeader"
+import Form from "./components/Form"
 
 function App() {
   return (
@@ -9,7 +9,7 @@ function App() {
         <Form />
       </div>
     </main>
-  );
+  )
 }
 
-export default App;
+export default App
