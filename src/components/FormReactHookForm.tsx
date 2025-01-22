@@ -133,7 +133,7 @@ export default function Form() {
               required: "A confirmação de senha precisa ser preenchido",
               minLength: {
                 value: 8,
-                message: "A senha deve ter no mínimo 8 caracteres",
+                message: "A senha deve ter no mínimo 6 caracteres",
               },
               validate(value, formValues) {
                 if (value === formValues.password) return true
