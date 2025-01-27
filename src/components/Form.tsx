@@ -3,6 +3,10 @@ import { useHookFormMask } from "use-mask-input"
 import { FieldValues, useForm } from "react-hook-form"
 import { EyeIcon, EyeOffIcon, Loader } from "lucide-react"
 import { ErrorMessage } from "@hookform/error-message"
+import { zodResolver } from "@hookform/resolvers/zod"
+import type { UserRegister } from "../schema"
+import { userRegisterSchema } from "../schema"
+import toast from "react-hot-toast"
 
 export default function Form() {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false)
@@ -12,8 +16,11 @@ export default function Form() {
     handleSubmit,
     setValue,
     setError,
+    reset,
     formState: { isSubmitting, errors },
-  } = useForm()
+  } = useForm<UserRegister>({
+    resolver: zodResolver(userRegisterSchema),
+  })
 
   const registerWithMask = useHookFormMask(register)
 
@@ -45,10 +52,16 @@ export default function Form() {
 
     if (!res.ok) {
       for (const field in resData.errors) {
-        setError(field, { type: "manual", message: resData.errors[field] })
+        setError(field as keyof UserRegister, {
+          type: "manual",
+          message: resData.errors[field],
+        })
       }
+      toast.error("Erro ao cadastrar o usuário")
     } else {
       console.log(resData)
+      toast.success("Usuário cadastrado com sucesso")
+      reset()
     }
   }
 
@@ -56,35 +69,14 @@ export default function Form() {
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="mb-4">
         <label htmlFor="name">Nome Completo</label>
-        <input
-          type="text"
-          id="name"
-          {...register("name", {
-            required: "O campo nome precisa ser preenchido",
-            maxLength: {
-              value: 255,
-              message: "O nome deve ter no máximo 255 caracteres",
-            },
-          })}
-        />
+        <input type="text" id="name" {...register("name")} />
         <p className="text-xs text-red-400 mt-1">
           <ErrorMessage errors={errors} name="name" />
         </p>
       </div>
       <div className="mb-4">
         <label htmlFor="email">E-mail</label>
-        <input
-          className=""
-          type="email"
-          id="email"
-          {...register("email", {
-            required: "O campo email precisa ser preenchido",
-            pattern: {
-              value: /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$/,
-              message: "E-mail inválido",
-            },
-          })}
-        />
+        <input className="" type="email" id="email" {...register("email")} />
         <p className="text-xs text-red-400 mt-1">
           <ErrorMessage errors={errors} name="email" />
         </p>
@@ -95,13 +87,7 @@ export default function Form() {
           <input
             type={isPasswordVisible ? "text" : "password"}
             id="password"
-            {...register("password", {
-              required: "O campo senha precisa ser preenchido",
-              minLength: {
-                value: 8,
-                message: "A senha deve ter no mínimo 8 caracteres",
-              },
-            })}
+            {...register("password")}
           />
           <p className="text-xs text-red-400 mt-1">
             <ErrorMessage errors={errors} name="password" />
@@ -129,17 +115,7 @@ export default function Form() {
           <input
             type={isPasswordVisible ? "text" : "password"}
             id="confirm-password"
-            {...register("password_confirmation", {
-              required: "A confirmação de senha precisa ser preenchido",
-              minLength: {
-                value: 8,
-                message: "A senha deve ter no mínimo 8 caracteres",
-              },
-              validate(value, formValues) {
-                if (value === formValues.password) return true
-                return "As senhas devem coincidir"
-              },
-            })}
+            {...register("password_confirmation")}
           />
           <p className="text-xs text-red-400 mt-1">
             <ErrorMessage errors={errors} name="password_confirmation" />
@@ -166,13 +142,7 @@ export default function Form() {
         <input
           type="text"
           id="phone"
-          {...registerWithMask("phone", "(99) 99999-9999", {
-            required: "O campo telefone precisa ser preenchido",
-            pattern: {
-              value: /^\(\d{2}\) \d{5}-\d{4}$/,
-              message: "Telefone inválido",
-            },
-          })}
+          {...registerWithMask("phone", "(99) 99999-9999")}
         />
         <p className="text-xs text-red-400 mt-1">
           <ErrorMessage errors={errors} name="phone" />
@@ -183,13 +153,7 @@ export default function Form() {
         <input
           type="text"
           id="cpf"
-          {...registerWithMask("cpf", "999.999.999-99", {
-            required: "O campo CPF precisa ser preenchido",
-            pattern: {
-              value: /^\d{3}\.\d{3}\.\d{3}-\d{2}$/,
-              message: "CPF inválido",
-            },
-          })}
+          {...registerWithMask("cpf", "999.999.999-99")}
         />
         <p className="text-xs text-red-400 mt-1">
           <ErrorMessage errors={errors} name="cpf" />
@@ -201,11 +165,6 @@ export default function Form() {
           type="text"
           id="cep"
           {...registerWithMask("zipcode", "99999-999", {
-            required: "O campo CEP precisa ser preenchido",
-            pattern: {
-              value: /^\d{5}-\d{3}$/,
-              message: "CEP inválido",
-            },
             onBlur: handleZipcodeBlur,
           })}
         />
@@ -240,9 +199,7 @@ export default function Form() {
           type="checkbox"
           id="terms"
           className="mr-2 accent-slate-500"
-          {...register("terms", {
-            required: "Os termos e condições devem ser aceitos",
-          })}
+          {...register("terms")}
         />
         <label
           className="text-sm  font-light text-slate-500 mb-1 inline"
